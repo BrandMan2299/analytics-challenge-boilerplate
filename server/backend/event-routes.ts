@@ -17,7 +17,6 @@ import {
 const router = express.Router();
 
 // Routes
-type sort = '+date' | '-date';
 
 interface Filter {
   sorting: string;
@@ -30,6 +29,13 @@ interface Filter {
 interface f {
   name?: eventName;
   browser?: browser
+}
+
+const getStartOfDay = (date: Date): Date => {
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  return new Date(`${year}/${month}/${day}`)
 }
 
 router.get('/all', (req: Request, res: Response) => {
@@ -67,7 +73,36 @@ router.get('/all-filtered', (req: Request, res: Response) => {
 });
 
 router.get('/by-days/:offset', (req: Request, res: Response) => {
-  res.send('/by-days/:offset')
+  let data = db.get('events').value();
+  let dayTime = 24 * 60 * 60 * 1000;
+  let endDate = getStartOfDay(new Date()).getTime() + dayTime - 1 - parseInt(req.params.offset) * dayTime
+  console.log(new Date(endDate));
+
+
+  data = data.filter(event => {
+    if (endDate > event.date && endDate - 7 * dayTime < event.date) {
+      return true
+    }
+    else { return false }
+  })
+  let days: Array<number> = [0, 0, 0, 0, 0, 0, 0]
+  data.forEach(event => {
+    let temp = endDate - event.date;
+    days[Math.floor(temp / dayTime)]++;
+  })
+  const results: any[] = [];
+  days.forEach((countByDay, index) => {
+    let year = new Date(endDate - dayTime * index).getUTCFullYear();
+    let month = new Date(endDate - dayTime * index).getUTCMonth() + 1;
+    let day = new Date(endDate - dayTime * index).getUTCDate();
+    results.unshift({
+      date: `${year}/${month}/${day}`,
+      count: countByDay
+    })
+  })
+  console.log(results);
+
+  res.json(results)
 });
 
 router.get('/by-hours/:offset', (req: Request, res: Response) => {
