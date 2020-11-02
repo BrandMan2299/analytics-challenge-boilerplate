@@ -49,7 +49,9 @@ router.get('/all-filtered', (req: Request, res: Response) => {
   if (filter.search !== "") {
     const reg: RegExp = new RegExp(filter.search, "i");
     data = data.filter((event: Event) => {
-      return reg.test(JSON.stringify(event));
+      return Object.values(event).some(value => {
+        return reg.test(value.toString());
+      })
     });
   }
 
