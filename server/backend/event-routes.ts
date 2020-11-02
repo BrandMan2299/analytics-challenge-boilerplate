@@ -14,6 +14,7 @@ import {
   userFieldsValidator,
   isUserValidator,
 } from "./validators";
+import { off } from "process";
 const router = express.Router();
 
 // Routes
@@ -36,6 +37,10 @@ const getStartOfDay = (date: Date): Date => {
   let month = date.getMonth() + 1;
   let day = date.getDate();
   return new Date(`${year}/${month}/${day}`)
+}
+
+const getCurrentDayTimeWithOffset = (offset: number) => {
+  return getStartOfDay(new Date()).getTime() - (24 * 60 * 60 * 1000) * offset
 }
 
 router.get('/all', (req: Request, res: Response) => {
@@ -76,9 +81,6 @@ router.get('/by-days/:offset', (req: Request, res: Response) => {
   let data = db.get('events').value();
   let dayTime = 24 * 60 * 60 * 1000;
   let endDate = getStartOfDay(new Date()).getTime() + dayTime - 1 - parseInt(req.params.offset) * dayTime
-  console.log(new Date(endDate));
-
-
   data = data.filter(event => {
     if (endDate > event.date && endDate - 7 * dayTime < event.date) {
       return true
@@ -100,13 +102,31 @@ router.get('/by-days/:offset', (req: Request, res: Response) => {
       count: countByDay
     })
   })
-  console.log(results);
-
   res.json(results)
 });
 
 router.get('/by-hours/:offset', (req: Request, res: Response) => {
-  res.send('/by-hours/:offset')
+  let dayTime = 24 * 60 * 60 * 1000;
+  const offset = parseInt(req.params.offset);
+  let data = db
+    .get('events')
+    .filter((event: Event) => {
+      return (getCurrentDayTimeWithOffset(offset) < event.date &&
+        event.date < getCurrentDayTimeWithOffset(offset) + dayTime)
+    })
+    .value();
+  let hoursCount: Array<number> = Array(24).fill(0)
+  data.forEach(event => {
+    hoursCount[Math.floor((((event.date - getCurrentDayTimeWithOffset(offset)) / 1000) / 60) / 60)]++;
+  })
+  const results: any[] = [];
+  hoursCount.forEach((hour, index) => {
+    results.push({
+      hour: `${index / 10 > 1 ? `${index}` : `0${index}`}:00`,
+      count: hour
+    })
+  })
+  res.json(results)
 });
 
 router.get('/today', (req: Request, res: Response) => {
