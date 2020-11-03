@@ -138,15 +138,98 @@ router.get('/week', (req: Request, res: Response) => {
 });
 
 router.get('/retention', (req: Request, res: Response) => {
-  const { dayZero } = req.query
-  res.send('/retention')
+  const dayZero = parseInt(req.query.dayZero)
+  let signUpData = db.get('events').filter({ name: 'signup' }).orderBy('date').value();
+  let dayTime = 24 * 60 * 60 * 1000;
+  const newUsersPerWeek: any[] = [];
+  let startDay = getStartOfDay(new Date(dayZero)).getTime();
+  while (startDay < new Date().getTime()) {
+    let count = 0;
+    let signedUpUsers: string[] = []
+    signUpData.forEach(event => {
+      if (startDay < event.date && event.date < startDay + 7 * dayTime) {
+        signedUpUsers.push(event.distinct_user_id);
+        count++;
+      }
+    })
+    newUsersPerWeek.push({ signedUpUsers, count });
+    startDay += dayTime * 7
+  }
+
+  let loginData = db.get('events').filter({ name: 'login' }).orderBy('date').value();
+
+  const weeklyRetentionArray: weeklyRetentionObject[] = [];
+
+
+  startDay = getStartOfDay(new Date(dayZero)).getTime();
+
+  for (let i = 0; i < newUsersPerWeek.length; i++) {
+
+    startDay += dayTime * 7 * (i);
+
+    const start = new Date(startDay).toDateString();
+    const end = new Date(startDay + dayTime * 7).toDateString();
+    const registrationWeek = i + 1;
+    const newUsers = newUsersPerWeek[i].count;
+
+    startDay += dayTime * 7;
+
+    let users = newUsersPerWeek[i].signedUpUsers.slice();
+
+    let weeklyRetention = [100];
+
+    while (startDay <= new Date().getTime()) {
+
+      let count = 0;
+
+      loginData.forEach(event => {
+
+        if (startDay < event.date && event.date < startDay + 7 * dayTime) {
+
+          const index = users.findIndex((id: string) => id === event.distinct_user_id);
+
+          if (index != -1) {
+
+            count++;
+
+            users.splice(index, 1);
+
+          }
+
+        }
+
+      })
+
+      weeklyRetention.push(Math.round((count / newUsersPerWeek[i].count) * 100))
+
+      startDay += dayTime * 7;
+
+      users = newUsersPerWeek[i].signedUpUsers.slice();
+
+    }
+    const weeklyRetentionObject: weeklyRetentionObject = {
+      registrationWeek,
+      newUsers,
+      weeklyRetention,
+      start,
+      end,
+    }
+    weeklyRetentionArray.push(weeklyRetentionObject);
+
+    startDay = getStartOfDay(new Date(dayZero)).getTime();
+  }
+
+
+  res.json(weeklyRetentionArray)
 });
 router.get('/:eventId', (req: Request, res: Response) => {
   res.send('/:eventId')
 });
 
 router.post('/', (req: Request, res: Response) => {
-  res.send('/')
+  const event: Event = req.body;
+  db.get('events').push(event).write();
+  res.send("added");
 });
 
 router.get('/chart/os/:time', (req: Request, res: Response) => {
@@ -168,3 +251,48 @@ router.get('/chart/geolocation/:time', (req: Request, res: Response) => {
 
 
 export default router;
+
+// [
+//   {
+//     registrationWeek: 1,
+//     start: '2020/09/28',
+//     end: '2020/10/05',
+//     newUsers: 10,
+//     weeklyRetentionArray: [ 100, 30, 60, 90, 80, 0 ]
+//   },
+//   {
+//     registrationWeek: 2,
+//     start: '2020/10/05',
+//     end: '2020/10/12',
+//     newUsers: 10,
+//     weeklyRetentionArray: [ 100, 90, 60, 100, 0 ]
+//   },
+//   {
+//     registrationWeek: 3,
+//     start: '2020/10/12',
+//     end: '2020/10/19',
+//     newUsers: 11,
+//     weeklyRetentionArray: [ 100, 100, 82, 9 ]
+//   },
+//   {
+//     registrationWeek: 4,
+//     start: '2020/10/19',
+//     end: '2020/10/26',
+//     newUsers: 10,
+//     weeklyRetentionArray: [ 100, 100, 10 ]
+//   },
+//   {
+//     registrationWeek: 5,
+//     start: '2020/10/26',
+//     end: '2020/11/02',
+//     newUsers: 9,
+//     weeklyRetentionArray: [ 100, 44 ]
+//   },
+//   {
+//     registrationWeek: 6,
+//     start: '2020/11/02',
+//     end: '2020/11/09',
+//     newUsers: 0,
+//     weeklyRetentionArray: [ 100 ]
+//   }
+// ]
