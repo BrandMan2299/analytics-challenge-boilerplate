@@ -222,6 +222,7 @@ router.get('/retention', (req: Request, res: Response) => {
 
   res.json(weeklyRetentionArray)
 });
+
 router.get('/:eventId', (req: Request, res: Response) => {
   res.send('/:eventId')
 });
@@ -235,7 +236,6 @@ router.post('/', (req: Request, res: Response) => {
 router.get('/chart/os/:time', (req: Request, res: Response) => {
   res.send('/chart/os/:time')
 })
-
 
 router.get('/chart/pageview/:time', (req: Request, res: Response) => {
   res.send('/chart/pageview/:time')

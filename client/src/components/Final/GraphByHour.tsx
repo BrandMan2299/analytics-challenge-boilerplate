@@ -12,8 +12,6 @@ const GraphByHour: React.FC = () => {
     useEffect(() => {
         (async () => {
             const { data } = await axios.get(`http://localhost:3001/events/by-hours/${(Math.floor(new Date().getTime() - startDate.getTime()) / (1000 * 24 * 60 * 60))}`)
-            console.log(data);
-
             setData(data)
         })();
     }, [startDate])
