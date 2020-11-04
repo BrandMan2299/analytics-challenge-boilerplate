@@ -1,6 +1,7 @@
 import React from "react";
 import { Interpreter } from "xstate";
 import { AuthMachineContext, AuthMachineEvents } from "../machines/authMachine";
+import Map from '../components/Final/Maps'
 
 export interface Props {
   authService: Interpreter<AuthMachineContext, any, AuthMachineEvents, any>;
@@ -8,8 +9,9 @@ export interface Props {
 
 const DashBoard: React.FC = () => {
   return (
-    <>
-    </>
+    <div style={{ display: 'flex' }}>
+      <Map />
+    </div>
   );
 };
 
