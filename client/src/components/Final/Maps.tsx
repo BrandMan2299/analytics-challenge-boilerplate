@@ -24,7 +24,7 @@ const Map: React.FC = () => {
     }, [])
 
     return (
-        <div>
+        <div style={{ border: 'solid' }}>
             <LoadScript googleMapsApiKey="AIzaSyB85Q7kNvvvOjxZwV6JgUwlu9imMuMKsrA">
                 <GoogleMap
                     mapContainerStyle={containerStyle}
