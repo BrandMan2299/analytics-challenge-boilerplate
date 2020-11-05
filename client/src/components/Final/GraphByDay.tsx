@@ -14,7 +14,7 @@ const GraphByDay: React.FC = () => {
 
     useEffect(() => {
         (async () => {
-            const { data } = await axios.get(`http://localhost:3001/events/by-days/${(new Date().getTime() - startDate.getTime()) / (1000 * 24 * 60 * 60)}`)
+            const { data } = await axios.get(`http://localhost:3001/events/by-days/${Math.floor(new Date().getTime() - startDate.getTime()) / (1000 * 24 * 60 * 60)}`)
             setData(data)
         })();
     }, [startDate])

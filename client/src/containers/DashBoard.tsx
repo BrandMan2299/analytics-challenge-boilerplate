@@ -4,6 +4,7 @@ import { AuthMachineContext, AuthMachineEvents } from "../machines/authMachine";
 import Map from '../components/Final/Maps'
 import GraphByDay from '../components/Final/GraphByDay'
 import GraphByHour from '../components/Final/GraphByHour'
+import Retention from '../components/Final/Retention'
 
 export interface Props {
   authService: Interpreter<AuthMachineContext, any, AuthMachineEvents, any>;
@@ -15,6 +16,7 @@ const DashBoard: React.FC = () => {
       <Map />
       <GraphByDay />
       <GraphByHour />
+      <Retention />
     </div>
   );
 };
