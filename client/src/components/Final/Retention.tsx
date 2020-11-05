@@ -8,17 +8,20 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
-
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function Retention() {
-    const [data, setData] = useState<Array<any>>([])
+    const [data, setData] = useState<Array<any>>([]);
+    const [startDateY, setStartDateY] = useState(new Date());
+
 
     useEffect(() => {
         (async () => {
-            const { data } = await axios.get('http://localhost:3001/events/retention?dayZero=1603270980962')
+            const { data } = await axios.get(`http://localhost:3001/events/retention?dayZero=${startDateY.getTime()}`)
             setData(data);
         })()
-    }, [])
+    }, [startDateY])
 
     const StyledTableCell = withStyles((theme) => ({
         head: {
@@ -61,25 +64,28 @@ export default function Retention() {
     const classes = useStyles();
 
     return (
-        <TableContainer component={Paper}>
-            <Table className={classes.table} aria-label="customized table">
-                <TableHead>
-                    <TableRow>
-                        {rows[0] ? Object.keys(rows[0]).map(key => {
-                            return <StyledTableCell align="left">{key}</StyledTableCell>
-                        }) : null}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {rows.map((row) => (
-                        <StyledTableRow key={row.name}>
-                            {Object.keys(rows[0]).map(key => {
-                                return <StyledTableCell align="left">{row[key]}</StyledTableCell>
-                            })}
-                        </StyledTableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <div style={{ border: 'solid' }}>
+            <DatePicker selected={startDateY} onChange={(date: Date) => setStartDateY(date)} />
+            <TableContainer component={Paper}>
+                <Table className={classes.table} aria-label="customized table">
+                    <TableHead>
+                        <TableRow>
+                            {rows[0] ? Object.keys(rows[0]).map(key => {
+                                return <StyledTableCell align="left">{key}</StyledTableCell>
+                            }) : null}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {rows.map((row) => (
+                            <StyledTableRow key={row.name}>
+                                {Object.keys(rows[0]).map(key => {
+                                    return <StyledTableCell align="left">{row[key]}</StyledTableCell>
+                                })}
+                            </StyledTableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </div>
     );
 }
