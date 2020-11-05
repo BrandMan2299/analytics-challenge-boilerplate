@@ -6,15 +6,8 @@ import { Request, Response } from "express";
 // some useful database functions in here:
 import db, { } from "./database";
 import { Event, weeklyRetentionObject, browser, eventName } from "../../client/src/models/event";
-import { ensureAuthenticated, validateMiddleware } from "./helpers";
+import { getPaginatedItems } from "../../client/src/utils/transactionUtils";
 
-import {
-  shortIdValidation,
-  searchValidation,
-  userFieldsValidator,
-  isUserValidator,
-} from "./validators";
-import { off } from "process";
 const router = express.Router();
 
 // Routes
@@ -155,57 +148,32 @@ router.get('/retention', (req: Request, res: Response) => {
     newUsersPerWeek.push({ signedUpUsers, count });
     startDay += dayTime * 7
   }
-
   let loginData = db.get('events').filter({ name: 'login' }).orderBy('date').value();
-
   const weeklyRetentionArray: weeklyRetentionObject[] = [];
-
-
   startDay = getStartOfDay(new Date(dayZero)).getTime();
-
   for (let i = 0; i < newUsersPerWeek.length; i++) {
-
     startDay += dayTime * 7 * (i);
-
     const start = new Date(startDay).toDateString();
     const end = new Date(startDay + dayTime * 7).toDateString();
     const registrationWeek = i + 1;
     const newUsers = newUsersPerWeek[i].count;
-
     startDay += dayTime * 7;
-
     let users = newUsersPerWeek[i].signedUpUsers.slice();
-
     let weeklyRetention = [100];
-
     while (startDay <= new Date().getTime()) {
-
       let count = 0;
-
       loginData.forEach(event => {
-
         if (startDay < event.date && event.date < startDay + 7 * dayTime) {
-
           const index = users.findIndex((id: string) => id === event.distinct_user_id);
-
           if (index != -1) {
-
             count++;
-
             users.splice(index, 1);
-
           }
-
         }
-
       })
-
       weeklyRetention.push(Math.round((count / newUsersPerWeek[i].count) * 100))
-
       startDay += dayTime * 7;
-
       users = newUsersPerWeek[i].signedUpUsers.slice();
-
     }
     const weeklyRetentionObject: weeklyRetentionObject = {
       registrationWeek,
@@ -215,13 +183,52 @@ router.get('/retention', (req: Request, res: Response) => {
       end,
     }
     weeklyRetentionArray.push(weeklyRetentionObject);
-
     startDay = getStartOfDay(new Date(dayZero)).getTime();
   }
-
-
   res.json(weeklyRetentionArray)
 });
+
+router.get('/filtered', (req: Request, res: Response) => {
+  const filter: Filter = req.query;
+  const f: f = { name: filter.type, browser: filter.browser };
+
+  if (!f.name) delete f.name;
+  if (!f.browser) delete f.browser;
+
+  let data = db.get('events').filter(f).value();
+
+  if (filter.search !== "") {
+    const reg: RegExp = new RegExp(filter.search, "i");
+    data = data.filter((event: Event) => {
+      return Object.values(event).some(value => {
+        return reg.test(value.toString());
+      })
+    });
+  }
+
+  if (filter.sorting) {
+    data.sort((e1: Event, e2: Event) =>
+      filter.sorting[0] === "+" ? e1.date - e2.date : e2.date - e1.date
+    );
+  }
+  const { totalPages, data: paginatedItems } = getPaginatedItems(
+    req.query.page,
+    req.query.limit,
+    data
+  );
+
+  res.status(200);
+  res.json({
+    pageData: {
+      page: res.locals.paginate.page,
+      limit: res.locals.paginate.limit,
+      hasNextPages: res.locals.paginate.hasNextPages(totalPages),
+      totalPages,
+    },
+    results: paginatedItems,
+  });
+}
+);
 
 router.get('/:eventId', (req: Request, res: Response) => {
   res.send('/:eventId')
