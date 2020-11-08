@@ -230,9 +230,6 @@ router.get('/filtered', (req: Request, res: Response) => {
 }
 );
 
-router.get('/:eventId', (req: Request, res: Response) => {
-  res.send('/:eventId')
-});
 
 router.post('/', (req: Request, res: Response) => {
   const event: Event = req.body;
@@ -256,5 +253,8 @@ router.get('/chart/geolocation/:time', (req: Request, res: Response) => {
   res.send('/chart/geolocation/:time')
 })
 
+router.get('/:eventId', (req: Request, res: Response) => {
+  res.send('/:eventId')
+});
 
 export default router;

@@ -4,8 +4,8 @@ import { Event } from '../../models/event';
 import axios from 'axios';
 
 const containerStyle = {
-    width: '600px',
-    height: '400px'
+    width: '100%',
+    height: '350px'
 };
 
 const center = {
@@ -25,6 +25,9 @@ const Map: React.FC = () => {
 
     return (
         <div style={{ border: 'solid' }}>
+            <div>
+                <strong>Events locations:</strong>
+            </div>
             <LoadScript googleMapsApiKey="AIzaSyB85Q7kNvvvOjxZwV6JgUwlu9imMuMKsrA">
                 <GoogleMap
                     mapContainerStyle={containerStyle}

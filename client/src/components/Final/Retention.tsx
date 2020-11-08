@@ -13,15 +13,15 @@ import "react-datepicker/dist/react-datepicker.css";
 
 export default function Retention() {
     const [data, setData] = useState<Array<any>>([]);
-    const [startDateY, setStartDateY] = useState(new Date());
+    const [startDate, setStartDate] = useState(new Date());
 
 
     useEffect(() => {
         (async () => {
-            const { data } = await axios.get(`http://localhost:3001/events/retention?dayZero=${startDateY.getTime()}`)
+            const { data } = await axios.get(`http://localhost:3001/events/retention?dayZero=${startDate.getTime()}`)
             setData(data);
         })()
-    }, [startDateY])
+    }, [startDate])
 
     const StyledTableCell = withStyles((theme) => ({
         head: {
@@ -58,14 +58,18 @@ export default function Retention() {
 
     const useStyles = makeStyles({
         table: {
-            minWidth: 700,
+            minWidth: 200,
+            maxHeight: 350,
+            overflow: "auto"
         },
     });
     const classes = useStyles();
 
     return (
         <div style={{ border: 'solid' }}>
-            <DatePicker selected={startDateY} onChange={(date: Date) => setStartDateY(date)} />
+            <div>
+                <strong>Pick A Date: </strong><DatePicker selected={startDate} onChange={(date: Date) => setStartDate(date)} />
+            </div>
             <TableContainer component={Paper}>
                 <Table className={classes.table} aria-label="customized table">
                     <TableHead>
